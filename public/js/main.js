@@ -35,6 +35,16 @@ var rooftopIcon = L.icon({
     iconAnchor: [25, 50],
     popupAnchor: [0, -50]
 });
+
+
+var unknownIcon = L.icon({
+  iconUrl: '/images/pin.svg',
+  iconSize: [35, 35],
+  iconAnchor: [25, 50],
+  popupAnchor: [0, -50]
+});
+
+
 // Function to make the API call and return the data
 async function fetchApiData() {
     try {
@@ -68,11 +78,14 @@ async function fetchApiData() {
   }
   
   // Function to add pins to the map
+  const countryClusters = {};
+  
   function addPinsToMap(results) {
     results.forEach((item) => {
       const latitude = parseFloat(item.properties.latitude);
       const longitude = parseFloat(item.properties.longitude);
       const projectType = item.properties.type_of_project__pv_ || 'Unknown';
+      const country = item.properties.pays || 'Unknown';
   
       if (!isNaN(latitude) && !isNaN(longitude)) {
         let selectedIcon;
@@ -90,12 +103,12 @@ async function fetchApiData() {
             selectedIcon = rooftopIcon;
             break;
           default:
-            selectedIcon = L.Icon.Default; // Default Leaflet icon
+            selectedIcon = unknownIcon; // Default Leaflet icon
             break;
         }
   
         // Add a pin to the map
-        L.marker([latitude, longitude], { icon: selectedIcon }).addTo(map)
+        const marker = L.marker([latitude, longitude], { icon: selectedIcon })
           .bindPopup(`
             <strong>${item.properties.dealname || 'N/A'}</strong> <br>
             <strong>Power:</strong> ${item.properties.amount || 'N/A'} MWp<br>
@@ -103,6 +116,14 @@ async function fetchApiData() {
             <strong>Project Type:</strong> ${projectType}
             
           `);
+          if (!countryClusters[country]) {
+            countryClusters[country] = L.markerClusterGroup();
+            map.addLayer(countryClusters[country]);
+          }
+    
+          // Add the marker to the appropriate cluster group
+          countryClusters[country].addLayer(marker);
+        
       }
     });
   }
