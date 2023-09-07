@@ -20,38 +20,43 @@ attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStree
 
 // Icons
 var carportIcon = L.icon({
-  iconUrl: '/images/carport.png',
-  iconSize: [50, 50],
+  //iconUrl: '/images/carport.png',
+  iconUrl: '/images/blue.png',
+  iconSize: [25, 41],
   iconAnchor: [25, 50],
   popupAnchor: [0, -50]
 });
 
 var floatingIcon = L.icon({
-  iconUrl: '/images/floating.png',
-  iconSize: [50, 50],
-  iconAnchor: [25, 50],
+  //iconUrl: '/images/floating.png',
+  iconUrl: '/images/green.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
   popupAnchor: [0, -50]
 });
 
 var groundIcon = L.icon({
-  iconUrl: '/images/ground.png',
-  iconSize: [50, 50],
-  iconAnchor: [25, 50],
+  //iconUrl: '/images/ground.png',
+  iconUrl: '/images/yellow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
   popupAnchor: [0, -50]
 });
 
 var rooftopIcon = L.icon({
-  iconUrl: '/images/rooftop.png',
-  iconSize: [50, 50],
-  iconAnchor: [25, 50],
+  //iconUrl: '/images/rooftop.png',
+  iconUrl: '/images/violet.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
   popupAnchor: [0, -50]
 });
 
 
 var unknownIcon = L.icon({
-  iconUrl: '/images/pin.svg',
-  iconSize: [35, 35],
-  iconAnchor: [25, 50],
+  //iconUrl: '/images/pin.svg',
+  iconUrl: '/images/grey.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
   popupAnchor: [0, -50]
 });
 
