@@ -98,7 +98,14 @@ async function displayApiResult(results) {
 }
 
 // Function to add pins to the map
-const markerClusterGroups = {};
+const projectTypeClusterGroups = {
+  'Carport': L.layerGroup().addTo(map),
+  'Floating': L.layerGroup().addTo(map),
+  'Ground': L.layerGroup().addTo(map),
+  'Rooftop': L.layerGroup().addTo(map),
+  'Unknown': L.layerGroup().addTo(map)
+};
+const countryTypeClusterGroups = {};
 
 function addPinsToMap(results) {
   results.forEach((item) => {
@@ -109,48 +116,45 @@ function addPinsToMap(results) {
     
     if (!isNaN(latitude) && !isNaN(longitude)) {
       let selectedIcon;
-      let projectTypeLower = projectType.toLowerCase();
-      let layerGroup;
-      
-      switch (projectTypeLower) {
+      switch (projectType.toLowerCase()) {
         case 'carport':
-        selectedIcon = carportIcon;
-        layerGroup = carportGroup;
-        break;
+          selectedIcon = carportIcon;
+          break;
         case 'floating':
-        selectedIcon = floatingIcon;
-        layerGroup = floatingGroup;
-        break;
+          selectedIcon = floatingIcon;
+          break;
         case 'ground':
-        selectedIcon = groundIcon;
-        layerGroup = groundGroup;
-        break;
+          selectedIcon = groundIcon;
+          break;
         case 'rooftop':
-        selectedIcon = rooftopIcon;
-        layerGroup = rooftopGroup;
-        break;
+          selectedIcon = rooftopIcon;
+          break;
         default:
-        selectedIcon = unknownIcon;
-        layerGroup = unknownGroup;
-        break;
+          selectedIcon = unknownIcon;
       }
       
-      // Add a pin to the map
       const marker = L.marker([latitude, longitude], { icon: selectedIcon })
       .bindPopup(`
       <strong>${item.properties.dealname || 'N/A'}</strong> <br>
       <strong>Power:</strong> ${item.properties.amount || 'N/A'} MWp<br>
       <strong>Country:</strong> ${item.properties.pays || 'N/A'}<br>
       <strong>Project Type:</strong> ${projectType}
-      
       `);
+      
+      const clusterKey = `${country}-${projectType}`;
+      
+      if (!countryTypeClusterGroups[clusterKey]) {
+        countryTypeClusterGroups[clusterKey] = L.markerClusterGroup().addTo(map);
+      }
 
-      
-      layerGroup.addLayer(marker);
-      
+      countryTypeClusterGroups[clusterKey].addLayer(marker);
+      if (projectTypeClusterGroups[projectType]) {
+        projectTypeClusterGroups[projectType].addLayer(countryTypeClusterGroups[clusterKey]);
+      }
     }
   });
 }
+
 
 
 // Function to load and display countries from GeoJSON
@@ -221,13 +225,11 @@ window.addEventListener('load', async (event) => {
   addPinsToMap(results);  // Call to add pins to the map
   // Add these layer groups to an object for use in the Layer Control
   const overlayMaps = {
-    'Carport': carportGroup,
-    'Floating': floatingGroup,
-    'Ground': groundGroup,
-    'Rooftop': rooftopGroup,
-    'Unknown': unknownGroup,
-    'Countries': countriesGroup 
+    'Countries': countriesGroup,
+    ...projectTypeClusterGroups // Ajoute les groupes par type de projet
   };
+  
+
   
   loadCountries(results);
   // Initialize the Layer Control
