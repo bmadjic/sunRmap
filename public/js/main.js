@@ -147,6 +147,23 @@ function addPinsToMap(results) {
   });
 }
 
+
+function loadCountries() {
+  fetch('/data/countries.geojson')
+    .then(response => response.json())
+    .then(data => {
+      L.geoJSON(data, {
+        style: function(feature) {
+          return { color: '#4a90e2' };  // You can customize the color here
+        },
+        onEachFeature: function(feature, layer) {
+          layer.bindPopup(`<strong>Country:</strong> ${feature.properties.ADMIN}`);
+        }
+      }).addTo(map);
+    })
+    .catch(error => console.error('Error loading GeoJSON:', error));
+}
+
 // Function to execute when the page loads
 window.addEventListener('load', async (event) => {
   const results = await fetchApiData();
@@ -162,6 +179,8 @@ window.addEventListener('load', async (event) => {
     'Unknown': unknownGroup
   };
   
+  loadCountries();
   // Initialize the Layer Control
   L.control.layers(null, overlayMaps).addTo(map);
+
 });
