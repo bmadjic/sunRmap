@@ -5,6 +5,8 @@ const groundGroup = L.layerGroup();
 const rooftopGroup = L.layerGroup();
 const unknownGroup = L.layerGroup();
 
+const countriesGroup = L.layerGroup();
+
 // Map 
 var map = L.map('map', {
   center: [51.505, -0.09],
@@ -66,7 +68,8 @@ async function fetchApiData() {
   try {
     const response = await fetch('/api/data');
     const data = await response.json();
-    return data.results;
+    //return data.results;
+    return data.results.filter(item => item.properties.pipeline == 52295361);
   } catch (error) {
     console.error('Error fetching data:', error);
     return null;
@@ -85,7 +88,8 @@ async function displayApiResult(results) {
       Longitude: ${item.properties.longitude || 'N/A'}, 
       Country: ${item.properties.pays || 'N/A'},
       Project Type: ${item.properties.type_of_project__pv_ || 'N/A'},
-      Amount: ${item.properties.amount || 'N/A'}
+      Amount: ${item.properties.amount || 'N/A'},
+      Pipeline : ${item.properties.pipeline || 'N/A'}
       </li>`;
     });
     output += '</ol>';
@@ -94,6 +98,7 @@ async function displayApiResult(results) {
 }
 
 // Function to add pins to the map
+const markerClusterGroups = {};
 
 function addPinsToMap(results) {
   results.forEach((item) => {
@@ -148,18 +153,62 @@ function addPinsToMap(results) {
 }
 
 
-function loadCountries() {
+// Function to load and display countries from GeoJSON
+function loadCountries(results) {
+  // Create an object to hold the total power and power by type for each country
+  const countryPower = {};
+
+  // Initialize the object with the sum of power for each country and type
+  results.forEach(item => {
+    const country = item.properties.pays;
+    const projectType = item.properties.type_of_project__pv_ || 'Unknown';
+    const power = parseFloat(item.properties.amount) || 0;
+
+    if (!countryPower[country]) {
+      countryPower[country] = { total: 0 };
+    }
+
+    countryPower[country].total += power;
+
+    if (!countryPower[country][projectType]) {
+      countryPower[country][projectType] = 0;
+    }
+
+    countryPower[country][projectType] += power;
+  });
+
+  // Extract unique countries from results
+  const uniqueCountries = new Set(results.map(item => item.properties.pays));
+
   fetch('/data/countries.geojson')
     .then(response => response.json())
     .then(data => {
-      L.geoJSON(data, {
+      // Filter GeoJSON data to include only countries present in results
+      const filteredData = {
+        ...data,
+        features: data.features.filter(feature => uniqueCountries.has(feature.properties.ADMIN))
+      };
+
+      L.geoJSON(filteredData, {
         style: function(feature) {
-          return { color: '#4a90e2' };  // You can customize the color here
+          return { color: '#EF6D23' };
         },
         onEachFeature: function(feature, layer) {
-          layer.bindPopup(`<strong>Country:</strong> ${feature.properties.ADMIN}`);
+          const countryName = feature.properties.ADMIN;
+          const powerData = countryPower[countryName] || { total: 0 };
+          let popupContent = `<strong>Country:</strong> ${countryName}<br>`;
+          
+          
+          // Include total power for each project type
+          for (const type in powerData) {
+            if (type !== 'total') {
+              popupContent += `<strong>${type} Power:</strong> ${powerData[type].toFixed(2)} MWP<br>`;
+            }
+          }
+          popupContent += `<strong>Total Power: ${powerData.total.toFixed(2)} MWP</strong><br>`;
+          layer.bindPopup(popupContent);
         }
-      }).addTo(map);
+      }).addTo(countriesGroup);
     })
     .catch(error => console.error('Error loading GeoJSON:', error));
 }
@@ -176,11 +225,13 @@ window.addEventListener('load', async (event) => {
     'Floating': floatingGroup,
     'Ground': groundGroup,
     'Rooftop': rooftopGroup,
-    'Unknown': unknownGroup
+    'Unknown': unknownGroup,
+    'Countries': countriesGroup 
   };
   
-  loadCountries();
+  loadCountries(results);
   // Initialize the Layer Control
   L.control.layers(null, overlayMaps).addTo(map);
+  countriesGroup.addTo(map);
 
 });

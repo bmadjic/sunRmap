@@ -3,7 +3,7 @@ const config = require('../config');
 
 const fetchData = async (req, res) => {
   const hubspotClient = new hubspot.Client({ accessToken: config.accessToken });
-  const properties = ["latitude", "longitude", "dealname", "pays", "type_of_project__pv_", "amount"];
+  const properties = ["latitude", "longitude", "dealname", "pays", "type_of_project__pv_", "amount", "pipeline"];
 
   try {
     const apiResponse = await hubspotClient.crm.deals.basicApi.getPage(
