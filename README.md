@@ -1,6 +1,6 @@
 # Add the API key to .env
 ```
-cp .env.dist
+cp .env.dist .env
 ```
 add the api key in .env file
 
