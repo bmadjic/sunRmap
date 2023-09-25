@@ -158,6 +158,9 @@ function addPinsToMap(results) {
 }
 
 
+// --------------------------------
+// -------- Country layers --------
+// --------------------------------
 
 function generateProjectListForCountry(countryName, results) {
   const projectsInCountry = results.filter(item => item.properties.pays === countryName);
