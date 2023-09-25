@@ -68,17 +68,57 @@ function displayApiResult(results) {
 }
 
 function createMarker(item, selectedIcon, latitude, longitude) {
-  return L.marker([latitude, longitude], { icon: selectedIcon })
+  const marker = L.marker([latitude, longitude], { icon: selectedIcon })
     .bindPopup(`<strong>${item.properties.dealname || 'N/A'}</strong><br>
     <strong>Power:</strong> ${item.properties.amount || 'N/A'} MWp<br>
     <strong>Country:</strong> ${item.properties.pays || 'N/A'}<br>
     <strong>Project Type:</strong> ${item.properties.type_of_project__pv_ || 'Unknown'}`);
+    
+  marker.feature = item;  // attach the feature data here
+  
+  return marker;
 }
+
+
+
+
+function createClusterIcon(cluster) {
+  const markers = cluster.getAllChildMarkers();
+  let totalPower = 0;
+  markers.forEach(marker => {
+      const power = parseFloat(marker.feature.properties.amount) || 0;
+      totalPower += power;
+  });
+
+  const size = getSizeForPower(totalPower);
+
+  return new L.DivIcon({
+      html: `<div style="width: ${size}px; height: ${size}px; line-height: ${size}px;"><span>${totalPower.toFixed(0)}</span></div>`,
+      className: 'marker-cluster',
+      iconSize: new L.Point(size, size)
+  });
+}
+
+
+function getSizeForPower(power) {
+  const baseSize = 20; // Base size of the cluster
+  const multiplier = 5; // Multiplier for the logarithmic scale
+
+  // Compute size based on logarithmic scale and cap it to min and max values
+  let size = baseSize + multiplier * Math.log(power + 1);
+  const minSize = 10;
+  const maxSize = 50;
+
+  return Math.min(Math.max(size, minSize), maxSize);
+}
+
 
 function addToCluster(marker, projectType, country) {
   const clusterKey = `${country}-${projectType}`;
   if (!countryTypeClusterGroups[clusterKey]) {
-    countryTypeClusterGroups[clusterKey] = L.markerClusterGroup().addTo(map);
+    countryTypeClusterGroups[clusterKey] = L.markerClusterGroup({
+      iconCreateFunction: createClusterIcon
+    }).addTo(map);
   }
   countryTypeClusterGroups[clusterKey].addLayer(marker);
   if (projectTypeClusterGroups[projectType]) {
