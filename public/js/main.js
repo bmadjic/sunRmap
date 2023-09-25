@@ -60,7 +60,7 @@ function displayApiResult(results) {
   if (results && Array.isArray(results)) {
     let output = '<h2>Data from API:</h2><ol>';
     results.forEach((item) => {
-      output += `<li>Deal Name: ${item.properties.dealname || 'N/A'}, Latitude: ${item.properties.latitude || 'N/A'}, Longitude: ${item.properties.longitude || 'N/A'}, Country: ${item.properties.pays || 'N/A'}, Project Type: ${item.properties.type_of_project__pv_ || 'N/A'}, Amount: ${item.properties.amount || 'N/A'}, Pipeline: ${item.properties.pipeline || 'N/A'}</li>`;
+      output += `<li>Deal Name: ${item.properties.dealname || 'N/A'}, Latitude: ${item.properties.latitude || 'N/A'}, Longitude: ${item.properties.longitude || 'N/A'}, Country: ${item.properties.pays || 'N/A'}, Project Type: ${item.properties.type_of_project__pv_ || 'N/A'}, Amount: ${item.properties.amount || 'N/A'}, Pipeline: ${item.properties.pipeline || 'N/A'}, Stage: ${item.properties.dealstage || 'N/A'}</li>`;
     });
     output += '</ol>';
     document.getElementById('api-data').innerHTML = output;
@@ -128,18 +128,22 @@ function addToCluster(marker, projectType, country) {
 
 function addPinsToMap(results) {
   results.forEach((item) => {
-    const latitude = parseFloat(item.properties.latitude);
-    const longitude = parseFloat(item.properties.longitude);
-    const projectType = item.properties.type_of_project__pv_ || 'Unknown';
-    const country = item.properties.pays || 'Unknown';
-    
-    if (!isNaN(latitude) && !isNaN(longitude)) {
-      const selectedIcon = icons[projectType] || icons['Unknown'];
-      const marker = createMarker(item, selectedIcon, latitude, longitude);
-      addToCluster(marker, projectType, country);
+    // Check if the stage is not "lost"
+    if(item.properties.dealstage !== '137866965') { // Exclude items in the "lost" stage
+      const latitude = parseFloat(item.properties.latitude);
+      const longitude = parseFloat(item.properties.longitude);
+      const projectType = item.properties.type_of_project__pv_ || 'Unknown';
+      const country = item.properties.pays || 'Unknown';
+
+      if (!isNaN(latitude) && !isNaN(longitude)) {
+        const selectedIcon = icons[projectType] || icons['Unknown'];
+        const marker = createMarker(item, selectedIcon, latitude, longitude);
+        addToCluster(marker, projectType, country);
+      }
     }
   });
 }
+
 
 
 
