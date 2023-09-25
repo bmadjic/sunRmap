@@ -5,8 +5,9 @@ var map = L.map('map', {
 });
 
 // Ajout du fond de carte
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.{ext}', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  ext: 'png'
 }).addTo(map);
 
 // Configuration des icônes
@@ -106,12 +107,6 @@ function createMarker(item, iconUrl, latitude, longitude) {
   marker.feature = item;
   return marker;
 }
-
-
-
-
-
-
 
 function createClusterIcon(cluster) {
   const markers = cluster.getAllChildMarkers();
@@ -285,8 +280,6 @@ window.addEventListener('load', async (event) => {
     'Countries': countriesGroup,
     ...projectTypeClusterGroups // Ajoute les groupes par type de projet
   };
-  
-
   
   loadCountries(results);
   // Initialize the Layer Control
