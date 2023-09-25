@@ -11,10 +11,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // Configuration des icônes
 const iconsConfig = {
-  'Carport': '/images/blue.png',
-  'Floating': '/images/green.png',
-  'Ground': '/images/yellow.png',
-  'Roof': '/images/violet.png',
+  'Carport': '/images/carport.png',
+  'Floating': '/images/floating.png',
+  'Ground': '/images/ground.png',
+  'Roof': '/images/rooftop.png',
   'Unknown': '/images/grey.png'
 };
 
@@ -27,19 +27,31 @@ const dealStageNames = {
 };
 
 
-function createIcon(url) {
-  return L.icon({
-    iconUrl: url,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [0, -50]
+function createIconWithPower(url, power) {
+  return L.divIcon({
+      className: 'custom-leaflet-icon',
+      html: `
+          <div style="text-align: center;">
+              <img src="${url}" width="50" />
+              <div style="font-weight: bold; font-size: 12px; color: #000; width:50px;
+              ">${power} MWp</div>
+          </div>
+      `,
+      iconSize: [40, ],
+      iconAnchor: [25 , 25],
+      popupAnchor: [0, -25]
   });
 }
 
+
+
+
 const icons = {};
 for (const [type, url] of Object.entries(iconsConfig)) {
-  icons[type] = createIcon(url);
+  icons[type] = url;  // Just store the URL, not an icon object
 }
+
+
 
 // Groupes de calques par type de projet
 const projectTypeClusterGroups = {
@@ -78,19 +90,25 @@ function displayApiResult(results) {
 
 
 
-function createMarker(item, selectedIcon, latitude, longitude) {
-  const stageName = dealStageNames[item.properties.dealstage] || item.properties.dealstage;  // Use the name if it exists, otherwise use the ID
+function createMarker(item, iconUrl, latitude, longitude) {
+  const power = item.properties.amount || 'N/A';
 
-  const marker = L.marker([latitude, longitude], { icon: selectedIcon })
-    .bindPopup(`<strong>${item.properties.dealname || 'N/A'}</strong><br>
-    <strong>Power:</strong> ${item.properties.amount || 'N/A'} MWp<br>
-    <strong>Stage:</strong> ${stageName}<br>
-    <strong>Project Type:</strong> ${item.properties.type_of_project__pv_ || 'Unknown'}`);
-    
-  marker.feature = item;  // attach the feature data here
-  
+  // Create a new icon for each marker with its respective power
+  const markerIcon = createIconWithPower(iconUrl, power); 
+
+  const stageName = dealStageNames[item.properties.dealstage] || item.properties.dealstage;
+  const marker = L.marker([latitude, longitude], { icon: markerIcon })
+      .bindPopup(`<strong>${item.properties.dealname || 'N/A'}</strong><br>
+      <strong>Power:</strong> ${power} MWp<br>
+      <strong>Stage:</strong> ${stageName}<br>
+      <strong>Project Type:</strong> ${item.properties.type_of_project__pv_ || 'Unknown'}`);
+      
+  marker.feature = item;
   return marker;
 }
+
+
+
 
 
 
@@ -149,8 +167,8 @@ function addPinsToMap(results) {
       const country = item.properties.pays || 'Unknown';
 
       if (!isNaN(latitude) && !isNaN(longitude)) {
-        const selectedIcon = icons[projectType] || icons['Unknown'];
-        const marker = createMarker(item, selectedIcon, latitude, longitude);
+        const iconUrl = icons[projectType] || icons['Unknown'];
+        const marker = createMarker(item, iconUrl, latitude, longitude);
         addToCluster(marker, projectType, country);
       }
     }
