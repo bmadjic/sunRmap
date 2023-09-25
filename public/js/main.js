@@ -14,7 +14,7 @@ const iconsConfig = {
   'Carport': '/images/blue.png',
   'Floating': '/images/green.png',
   'Ground': '/images/yellow.png',
-  'Rooftop': '/images/violet.png',
+  'Roof': '/images/violet.png',
   'Unknown': '/images/grey.png'
 };
 
@@ -37,7 +37,7 @@ const projectTypeClusterGroups = {
   'Carport': L.layerGroup().addTo(map),
   'Floating': L.layerGroup().addTo(map),
   'Ground': L.layerGroup().addTo(map),
-  'Rooftop': L.layerGroup().addTo(map),
+  'Roof': L.layerGroup().addTo(map),
   'Unknown': L.layerGroup().addTo(map)
 };
 
