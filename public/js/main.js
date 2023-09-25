@@ -159,6 +159,28 @@ function addPinsToMap(results) {
 
 
 
+function generateProjectListForCountry(countryName, results) {
+  const projectsInCountry = results.filter(item => item.properties.pays === countryName);
+
+  if (projectsInCountry.length === 0) return '<p>No projects for this country.</p>';
+
+  let tableContent = '<table border="1" cellspacing="0" cellpadding="5">';
+  tableContent += '<thead><tr><th>Name</th><th>Type</th><th>Stage</th><th>Power (MWp)</th></tr></thead><tbody>';
+
+  projectsInCountry.forEach(project => {
+      const name = project.properties.dealname || 'N/A';
+      const type = project.properties.type_of_project__pv_ || 'Unknown';
+      const stageId = project.properties.dealstage;
+      const stage = dealStageNames[stageId] || stageId;
+      const power = project.properties.amount || 'N/A';
+
+      tableContent += `<tr><td>${name}</td><td>${type}</td><td>${stage}</td><td>${power}</td></tr>`;
+  });
+
+  tableContent += '</tbody></table>';
+  return tableContent;
+}
+
 
 // Function to load and display countries from GeoJSON
 function loadCountries(results) {
@@ -184,6 +206,7 @@ function loadCountries(results) {
     countryPower[country][projectType] += power;
   });
 
+  
   // Extract unique countries from results
   const uniqueCountries = new Set(results.map(item => item.properties.pays));
 
@@ -213,6 +236,10 @@ function loadCountries(results) {
             }
           }
           popupContent += `<strong>Total Power: ${powerData.total.toFixed(2)} MWp</strong><br>`;
+
+          popupContent += '<br><a href="#" onclick="event.preventDefault(); this.nextSibling.style.display = \'block\';">Show Projects</a>';
+          popupContent += `<div style="display:none;">${generateProjectListForCountry(countryName, results)}</div>`;
+
           layer.bindPopup(popupContent);
         }
       }).addTo(countriesGroup);
