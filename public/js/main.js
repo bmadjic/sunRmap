@@ -18,6 +18,15 @@ const iconsConfig = {
   'Unknown': '/images/grey.png'
 };
 
+const dealStageNames = {
+  '134157045': 'Qualification',
+  '134157049': 'Land contractualization',
+  '134164162': 'Early development',
+  '174987747': 'Advanced development',
+  '137866965': 'Lost'
+};
+
+
 function createIcon(url) {
   return L.icon({
     iconUrl: url,
@@ -67,11 +76,15 @@ function displayApiResult(results) {
   }
 }
 
+
+
 function createMarker(item, selectedIcon, latitude, longitude) {
+  const stageName = dealStageNames[item.properties.dealstage] || item.properties.dealstage;  // Use the name if it exists, otherwise use the ID
+
   const marker = L.marker([latitude, longitude], { icon: selectedIcon })
     .bindPopup(`<strong>${item.properties.dealname || 'N/A'}</strong><br>
     <strong>Power:</strong> ${item.properties.amount || 'N/A'} MWp<br>
-    <strong>Country:</strong> ${item.properties.pays || 'N/A'}<br>
+    <strong>Stage:</strong> ${stageName}<br>
     <strong>Project Type:</strong> ${item.properties.type_of_project__pv_ || 'Unknown'}`);
     
   marker.feature = item;  // attach the feature data here
@@ -190,16 +203,16 @@ function loadCountries(results) {
         onEachFeature: function(feature, layer) {
           const countryName = feature.properties.ADMIN;
           const powerData = countryPower[countryName] || { total: 0 };
-          let popupContent = `<strong>Country:</strong> ${countryName}<br>`;
+          let popupContent = `<strong>${countryName}</strong><br>`;
           
           
           // Include total power for each project type
           for (const type in powerData) {
             if (type !== 'total') {
-              popupContent += `<strong>${type} Power:</strong> ${powerData[type].toFixed(2)} MWP<br>`;
+              popupContent += `<strong>${type} Power:</strong> ${powerData[type].toFixed(2)} MWp<br>`;
             }
           }
-          popupContent += `<strong>Total Power: ${powerData.total.toFixed(2)} MWP</strong><br>`;
+          popupContent += `<strong>Total Power: ${powerData.total.toFixed(2)} MWp</strong><br>`;
           layer.bindPopup(popupContent);
         }
       }).addTo(countriesGroup);
