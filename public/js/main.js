@@ -181,70 +181,76 @@ function generateProjectListForCountry(countryName, results) {
   return tableContent;
 }
 
-
-// Function to load and display countries from GeoJSON
-function loadCountries(results) {
-  // Create an object to hold the total power and power by type for each country
+function calculateCountryPower(results) {
   const countryPower = {};
 
-  // Initialize the object with the sum of power for each country and type
   results.forEach(item => {
-    const country = item.properties.pays;
-    const projectType = item.properties.type_of_project__pv_ || 'Unknown';
-    const power = parseFloat(item.properties.amount) || 0;
+      const country = item.properties.pays;
+      const projectType = item.properties.type_of_project__pv_ || 'Unknown';
+      const power = parseFloat(item.properties.amount) || 0;
 
-    if (!countryPower[country]) {
-      countryPower[country] = { total: 0 };
-    }
+      if (!countryPower[country]) {
+          countryPower[country] = { total: 0 };
+      }
 
-    countryPower[country].total += power;
+      countryPower[country].total += power;
 
-    if (!countryPower[country][projectType]) {
-      countryPower[country][projectType] = 0;
-    }
+      if (!countryPower[country][projectType]) {
+          countryPower[country][projectType] = 0;
+      }
 
-    countryPower[country][projectType] += power;
+      countryPower[country][projectType] += power;
   });
 
-  
-  // Extract unique countries from results
-  const uniqueCountries = new Set(results.map(item => item.properties.pays));
+  return countryPower;
+}
+
+function getUniqueCountries(results) {
+  return new Set(results.map(item => item.properties.pays));
+}
+
+function createPopupContent(countryName, powerData, results) {
+  let popupContent = `<strong>${countryName}</strong><br>`;
+        
+  // Include total power for each project type
+  for (const type in powerData) {
+      if (type !== 'total') {
+          popupContent += `<strong>${type} Power:</strong> ${powerData[type].toFixed(2)} MWp<br>`;
+      }
+  }
+
+  popupContent += `<strong>Total Power: ${powerData.total.toFixed(2)} MWp</strong><br>`;
+  popupContent += '<br><a href="#" onclick="event.preventDefault(); this.nextSibling.style.display = \'block\';">Show Projects</a>';
+  popupContent += `<div style="display:none;">${generateProjectListForCountry(countryName, results)}</div>`;
+
+  return popupContent;
+}
+
+function loadCountries(results) {
+  const countryPower = calculateCountryPower(results);
+  const uniqueCountries = getUniqueCountries(results);
 
   fetch('/data/countries.geojson')
-    .then(response => response.json())
-    .then(data => {
-      // Filter GeoJSON data to include only countries present in results
-      const filteredData = {
-        ...data,
-        features: data.features.filter(feature => uniqueCountries.has(feature.properties.ADMIN))
-      };
+      .then(response => response.json())
+      .then(data => {
+          const filteredData = {
+              ...data,
+              features: data.features.filter(feature => uniqueCountries.has(feature.properties.ADMIN))
+          };
 
-      L.geoJSON(filteredData, {
-        style: function(feature) {
-          return { color: '#EF6D23' };
-        },
-        onEachFeature: function(feature, layer) {
-          const countryName = feature.properties.ADMIN;
-          const powerData = countryPower[countryName] || { total: 0 };
-          let popupContent = `<strong>${countryName}</strong><br>`;
-          
-          
-          // Include total power for each project type
-          for (const type in powerData) {
-            if (type !== 'total') {
-              popupContent += `<strong>${type} Power:</strong> ${powerData[type].toFixed(2)} MWp<br>`;
-            }
-          }
-          popupContent += `<strong>Total Power: ${powerData.total.toFixed(2)} MWp</strong><br>`;
-
-          popupContent += '<br><a href="#" onclick="event.preventDefault(); this.nextSibling.style.display = \'block\';">Show Projects</a>';
-          popupContent += `<div style="display:none;">${generateProjectListForCountry(countryName, results)}</div>`;
-
-          layer.bindPopup(popupContent);
-        }
-      }).addTo(countriesGroup);
-    })
-    .catch(error => console.error('Error loading GeoJSON:', error));
+          L.geoJSON(filteredData, {
+              style: function(feature) {
+                  return { color: '#EF6D23' };
+              },
+              onEachFeature: function(feature, layer) {
+                  const countryName = feature.properties.ADMIN;
+                  const powerData = countryPower[countryName] || { total: 0 };
+                  const popupContent = createPopupContent(countryName, powerData, results);
+                  layer.bindPopup(popupContent);
+              }
+          }).addTo(countriesGroup);
+      })
+      .catch(error => console.error('Error loading GeoJSON:', error));
 }
 
 // Function to execute when the page loads
