@@ -13,7 +13,7 @@
     "@hubspot/api-client": "^9.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "express": "^4.21.2",
+    "express": "^4.22.1",
     "leaflet": "^1.9.4"
   }
 }
